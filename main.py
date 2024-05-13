@@ -1,111 +1,79 @@
 import telebot
-from telebot import types
 
-# Создаем экземпляр бота
-bot = telebot.TeleBot("7071388054:AAGstnlSwGQY4vPdYgeZ0EyDBpSYpqayiw8")
+bot_token = '7071388054:AAGstnlSwGQY4vPdYgeZ0EyDBpSYpqayiw8'  # Укажите здесь токен вашего бота
 
-# Список вопросов и вариантов ответов
+# Вопросы и варианты ответов
 questions = [
-   {
-        "question": "Вопрос 1: Какие предметы тебе нравится изучать?",
-        "options": ["Математика", "Физика", "Литература"]
-    },
-    {
-        "question": "Вопрос 2: Какие навыки тебе интересно развивать?",
-        "options": ["Программирование", "Графический дизайн", "Музыка"]
-    }, 
-    {
-        "question": "Вопрос 3: Какое ваше любимое время года?",
-        "options": ["Весна", "Лето", "Зима", "Осень"]
-    },
-    {
-        "question": "Вопрос 4: Какие виды спорта вам нравятся?",
-        "options": ["Футбол", "Хоккей", "Басткетбол"]
-    },
-    {
-        "question": "Вопрос 5: Какое ваше любимое блюдо?",
-        "options": ["Пицца", "Паста", "Суши"]
-    },
-    {
-        "question": "Вопрос 6: Какие язык программирования вы знаете?",
-        "options": ["Python", "Java", "Js"]
-    },
-    {
-        "question": "Вопрос 7: Какие книги вам нравится читать?",
-        "options": ["Фантастические романы", "Детективы", "Классическая литература"]
-    },
-    {
-        "question": "Вопрос 8: Какие музыкальные жанры вы предпочитаете?",
-        "options": ["Рок", "Поп-музыка", "Джаз"]
-    },
-    {
-        "question": "Вопрос 9: Какое ваше любимое место для отдыха?",
-        "options": ["Горы", "Море", "Кемпинг"]
-    },
-    {
-        "question": "Вопрос 10: Какие фильмы вам нравится смотреть?",
-        "options": ["Комедии", "Драмы", "Фантастика"]
-    },
+    "Вопрос 1: Какие предметы тебе нравится изучать?",
+    "Вопрос 2: Какие навыки тебе интересно развивать?",
+    "Вопрос 3: Какое ваше любимое время года?",
+    "Вопрос 4: Какие виды спорта вам нравятся?",
+    "Вопрос 5: Какое ваше любимое блюдо?",
+    "Вопрос 6: Какие язык программирования вы знаете?",
+    "Вопрос 7: Какие книги вам нравится читать?",
+    "Вопрос 8: Какие музыкальные жанры вы предпочитаете?",
+    "Вопрос 9: Какое ваше любимое место для отдыха?",
+    "Вопрос 10: Какие фильмы вам нравится смотреть?",
+    # Добавьте остальные вопросы здесь
 ]
 
-# Словарь для хранения ответов пользователей
-user_answers = {}
+answers = [
+    ["Математика", "Физика", "Литература"],
+    ["Программирование", "Графический дизайн", "Музыка"],
+    ["Весна", "Лето", "Зима", "Осень"],
+    ["Футбол", "Хоккей", "Басткетбол"],
+    ["Пицца", "Паста", "Суши"],
+    ["Python", "Java", "Js"],
+    ["Фантастические романы", "Детективы", "Классическая литература"],
+    ["Рок", "Поп-музыка", "Джаз"],
+    ["Горы", "Море", "Кемпинг"],
+    ["Комедии", "Драмы", "Фантастика"]
+    # Добавьте варианты ответов для остальных вопросов здесь
+]
 
-# Обработчик команды /start
+user_answers = {}  # Словарь для сохранения ответов пользователя
+
+# Создание бота
+bot = telebot.TeleBot(bot_token)
+
+
 @bot.message_handler(commands=['start'])
-def start(message):
-    # Отправляем приветственное сообщение
-    bot.send_message(message.chat.id, "Привет! Я бот для прохождения теста. Я задам тебе несколько вопросов.")
+def start_test(message):
+    user_id = message.chat.id
+    user_answers[user_id] = []  # Создаем пустой список для ответов пользователя
+    send_question(user_id, 0)  # Отправляем первый вопрос
 
-    # Начинаем тест
-    ask_question(message.chat.id, 0)
 
-# Функция для задания вопросов
-def ask_question(chat_id, question_index):
-    # Проверяем, все ли вопросы заданы
-    if question_index >= len(questions):
-        # Если все вопросы заданы, вычисляем результат
-        result = calculate_result()
-        bot.send_message(chat_id, f"Тест завершен! Результат: {result}")
-        return
+def send_question(user_id, question_index):
+    question = questions[question_index]
+    options = answers[question_index]
 
-    # Отправляем очередной вопрос и кнопки с вариантами ответов
-    question = questions[question_index]["question"]
-    options = questions[question_index]["options"]
-
-    # Создаем объект ReplyKeyboardMarkup для кнопок
-    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-
-    # Добавляем кнопки с вариантами ответов
+    markup = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     for option in options:
-        button = types.KeyboardButton(text=option)
-        keyboard.add(button)
+        markup.add(telebot.types.KeyboardButton(option))
 
-    # Отправляем вопрос и кнопки пользователю
-    bot.send_message(chat_id, question, reply_markup=keyboard)
+    bot.send_message(user_id, question, reply_markup=markup)
 
-# Обработчик ответов пользователя
+
 @bot.message_handler(func=lambda message: True)
-def handle_message(message):
-    # Получаем ответ пользователя
-    answer = message.text
+def handle_answer(message):
+    user_id = message.chat.id
+    user_answers[user_id].append(message.text)  # Сохраняем ответ пользователя
 
-    # Получаем текущий индекс вопроса для данного пользователя
-    question_index = user_answers.get(message.chat.id, 0)
+    if len(user_answers[user_id]) < len(questions):
+        send_question(user_id, len(user_answers[user_id]))  # Отправляем следующий вопрос
+    else:
+        show_result(user_id)  # Показываем результат
 
-    # Сохраняем ответ пользователя
-    user_answers[message.chat.id] = answer
-    
-    # Переходим к следующему вопросу
-    ask_question(message.chat.id, question_index + 1)
 
-# Функция для вычисления результата
-def calculate_result():
-    # Здесь можно использовать сохраненные ответы пользователя в словаре user_answers
-    # и на основе них вычислить результат, отражающий подходящую специальность
+def show_result(user_id):
+    # Здесь вы можете написать логику для определения результата на основе ответов пользователя
+    # В данном примере просто отправляем сообщение с ответами пользователя
+    result = "Результат:\n"
+    for i, answer in enumerate(user_answers[user_id]):
+        result += f"Вопрос {i + 1}: {answer}\n"
 
-    # Возвращаем простой заглушечный результат
-    return "Результат"
+    bot.send_message(user_id, result)
 
-# Запускаем бота
+
 bot.polling()
